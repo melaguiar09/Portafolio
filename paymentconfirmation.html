@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pago Confirmado — Melvin Aguiar</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0e0c;
+      --bg-card: #161614;
+      --bg-card-hover: #1c1c1a;
+      --text: #f0efe8;
+      --text-secondary: #a8a89e;
+      --text-tertiary: #666660;
+      --border: rgba(255,255,255,0.07);
+      --border-md: rgba(255,255,255,0.13);
+      --accent: #e07d3a;
+      --accent-dim: rgba(224,125,58,0.15);
+      --accent-border: rgba(224,125,58,0.3);
+      --green: #4caf7d;
+      --green-dim: rgba(76,175,125,0.12);
+      --green-border: rgba(76,175,125,0.3);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(14,14,12,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 2.5rem;
+      height: 58px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      background: var(--text);
+      color: var(--bg);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── MAIN ── */
+    .main {
+      min-height: calc(100vh - 58px - 70px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 110%, rgba(76,175,125,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 50% 115%, rgba(30,100,60,0.15) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* ── CONFIRMATION CARD ── */
+    .confirmation-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-xl);
+      padding: 3rem 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    /* success icon */
+    .success-icon-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--green-dim);
+      border: 0.5px solid var(--green-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* heading */
+    .confirmation-heading {
+      text-align: center;
+    }
+
+    .confirmation-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(28px, 5vw, 38px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .confirmation-title em {
+      font-style: italic;
+      color: #4caf7d;
+    }
+
+    .confirmation-subtitle {
+      margin-top: 0.75rem;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* divider */
+    .divider {
+      height: 0.5px;
+      background: var(--border);
+    }
+
+    /* detail rows */
+    .details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .detail-label {
+      color: var(--text-tertiary);
+    }
+
+    .detail-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .detail-value.highlight {
+      color: var(--accent);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--green-dim);
+      border: 0.5px solid var(--green-border);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* actions */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      width: 100%;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border: 0.5px solid var(--border-md);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      background: transparent;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      width: 100%;
+    }
+    .btn-outline:hover { border-color: var(--border-md); color: var(--text); }
+
+    /* note */
+    .confirmation-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      border-top: 0.5px solid var(--border);
+      padding: 2rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 15px;
+      color: var(--text-secondary);
+    }
+
+    .footer-text {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 0 1.25rem; }
+      .nav-links { display: none; }
+      .main { padding: 2.5rem 1.25rem; }
+      .confirmation-card { padding: 2rem 1.5rem; }
+      .footer { flex-direction: column; align-items: flex-start; padding: 1.5rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-brand" href="index.html">Melvin Aguiar</a>
+    <ul class="nav-links">
+      <li><a href="index.html#servicios">Servicios</a></li>
+      <li><a href="index.html#habilidades">Habilidades</a></li>
+      <li><a href="index.html#contacto">Contacto</a></li>
+    </ul>
+    <a class="nav-cta" href="index.html#contacto">Contactar</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="confirmation-card">
+
+      <!-- Icon -->
+      <div class="success-icon-wrap">
+        <div class="success-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M6 14.5l5.5 5.5 10.5-11" stroke="#4caf7d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Heading -->
+      <div class="confirmation-heading">
+        <h1 class="confirmation-title">¡Pago <em>confirmado</em>!</h1>
+        <p class="confirmation-subtitle">
+          Tu pago fue procesado exitosamente. Recibirás un correo de confirmación con los detalles de tu pedido.
+        </p>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Details -->
+      <div class="details">
+        <div class="detail-row">
+          <span class="detail-label">Estado</span>
+          <span class="status-badge">
+            <span class="status-dot"></span>
+            Aprobado
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">N.° de orden</span>
+          <span class="detail-value" id="order-number">#MA-000000</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Fecha</span>
+          <span class="detail-value" id="order-date">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Método de pago</span>
+          <span class="detail-value">Tarjeta •••• 4242</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Total pagado</span>
+          <span class="detail-value highlight" id="order-total">$0.00</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn-primary" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3.5 4.5V2h7v2.5M3.5 10.5H2a1 1 0 01-1-1V6a1 1 0 011-1h10a1 1 0 011 1v3.5a1 1 0 01-1 1h-1.5M3.5 8h7v4h-7V8z" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Descargar recibo
+        </button>
+        <a class="btn-outline" href="index.html">
+          Volver al inicio
+        </a>
+      </div>
+
+      <!-- Note -->
+      <p class="confirmation-note">
+        ¿Tienes alguna pregunta? Escríbeme a
+        <a href="index.html#contacto" style="color:var(--text-secondary);text-decoration:underline;text-underline-offset:3px;">melvinaguiar</a>
+        y te responderé a la brevedad.
+      </p>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span class="footer-brand">Melvin Aguiar</span>
+    <span class="footer-text">Especialista en IA y automatización · 2026</span>
+  </footer>
+
+  <script>
+    // Populate dynamic fields from URL params or defaults
+    const params = new URLSearchParams(window.location.search);
+
+    const orderId = params.get('order') || ('MA-' + Math.random().toString(36).slice(2,8).toUpperCase());
+    document.getElementById('order-number').textContent = '#' + orderId;
+
+    const total = params.get('total');
+    if (total) document.getElementById('order-total').textContent = '$' + parseFloat(total).toFixed(2);
+
+    const now = new Date();
+    document.getElementById('order-date').textContent = now.toLocaleDateString('es-ES', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+  </script>
+
+</body>
+</html>
